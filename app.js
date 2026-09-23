@@ -11,7 +11,6 @@ const firebaseConfig = {
   appId: "1:331204790714:web:ec65d20ec4b454e51cb583"
 };
 
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, set, get, push, remove, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -73,6 +72,13 @@ hamburgerBtn.addEventListener('click', () => {
     siteNav.classList.toggle('active');
 });
 
+// Fechar menu mobile ao clicar em um link
+document.addEventListener('click', (e) => {
+    if (e.target.matches('.site-nav a')) {
+        siteNav.classList.remove('active');
+    }
+});
+
 // --- CARREGAR CONFIGURAÇÕES GERAIS ---
 async function loadSettings() {
     try {
@@ -82,11 +88,16 @@ async function loadSettings() {
             document.getElementById('site-title').innerText = data.title || "Meu Blog Moderno";
             document.getElementById('setting-title').value = data.title || "";
             
+            const logoImg = document.getElementById('site-logo-img');
+            const logoText = document.getElementById('site-logo-text');
             if (data.logo) {
-                document.getElementById('site-logo-img').src = data.logo;
-                document.getElementById('site-logo-img').style.display = 'block';
-                document.getElementById('site-logo-text').style.display = 'none';
+                logoImg.src = data.logo;
+                logoImg.style.display = 'block';
+                logoText.style.display = 'none';
                 document.getElementById('setting-logo').value = data.logo;
+            } else {
+                logoImg.style.display = 'none';
+                logoText.style.display = 'flex';
             }
             if (data.favicon) {
                 document.getElementById('site-favicon').href = data.favicon;
@@ -124,15 +135,13 @@ async function loadMenus() {
         }
 
         menus.forEach(menu => {
-            // Renderizar no site
             const li = document.createElement('li');
             li.innerHTML = `<a href="${menu.url}">${menu.name}</a>`;
             menuList.appendChild(li);
 
-            // Renderizar no painel admin
             const adminLi = document.createElement('div');
             adminLi.className = 'admin-list-item';
-            adminLi.innerHTML = `<span><b>${menu.name}</b> (${menu.url})</span> <button class="btn-danger" onclick="deleteMenu('${menu.id}')"><i class="fa-solid fa-trash"></i></button>`;
+            adminLi.innerHTML = `<span><b>${menu.name}</b> (${menu.url})</span> <button type="button" class="btn-danger" onclick="deleteMenu('${menu.id}')"><i class="fa-solid fa-trash"></i></button>`;
             adminMenuList.appendChild(adminLi);
         });
     } catch (error) {
@@ -142,8 +151,12 @@ async function loadMenus() {
 
 window.deleteMenu = async function(id) {
     if (confirm("Deseja excluir este item do menu?")) {
-        await remove(ref(db, 'menus/' + id));
-        loadMenus();
+        try {
+            await remove(ref(db, 'menus/' + id));
+            loadMenus();
+        } catch (error) {
+            alert("Erro ao excluir: " + error.message);
+        }
     }
 }
 
@@ -156,7 +169,6 @@ async function loadPosts() {
             snapshot.forEach((childSnapshot) => {
                 allPosts.push({ id: childSnapshot.key, ...childSnapshot.val() });
             });
-            // Ordenar por data decrescente
             allPosts.sort((a, b) => b.date - a.date);
         }
         renderPosts();
@@ -170,13 +182,11 @@ function renderPosts() {
     const container = document.getElementById('posts-container');
     container.innerHTML = '';
 
-    // Filtragem por pesquisa
     let filtered = allPosts;
     if (searchQuery) {
         filtered = allPosts.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
-    // Paginação
     const totalPages = Math.ceil(filtered.length / postsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
 
@@ -199,7 +209,7 @@ function renderPosts() {
                 <div class="post-date"><i class="fa-regular fa-calendar"></i> ${new Date(post.date).toLocaleDateString('pt-BR')}</div>
                 <div class="post-summary">${post.summary}</div>
                 <div class="post-full-content" style="display:none; margin-top:15px;">${post.content}</div>
-                <button class="btn-primary" onclick="toggleReadMore(this)" style="width: auto; padding: 6px 15px; font-size: 0.9rem;">Ler Mais</button>
+                <button type="button" class="btn-primary" onclick="toggleReadMore(this)" style="width: auto; padding: 6px 15px; font-size: 0.9rem;">Ler Mais</button>
             </div>
         `;
         container.appendChild(card);
@@ -226,16 +236,15 @@ function renderPagination(totalPages, current) {
 
     if (totalPages <= 1) return;
 
-    // Botão Anterior (<)
     if (current > 1) {
         const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
         prevBtn.className = 'page-btn';
         prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
         prevBtn.onclick = () => { currentPage--; renderPosts(); };
         container.appendChild(prevBtn);
     }
 
-    // Cálculo de intervalo de páginas (máximo 5 números)
     let startPage = Math.max(1, current - 2);
     let endPage = Math.min(totalPages, startPage + 4);
     if (endPage - startPage < 4) {
@@ -244,15 +253,16 @@ function renderPagination(totalPages, current) {
 
     for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = `page-btn ${i === current ? 'active' : ''}`;
         btn.innerText = i;
         btn.onclick = () => { currentPage = i; renderPosts(); };
         container.appendChild(btn);
     }
 
-    // Botão Próximo (>)
     if (current < totalPages) {
         const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
         nextBtn.className = 'page-btn';
         nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
         nextBtn.onclick = () => { currentPage++; renderPosts(); };
@@ -262,13 +272,13 @@ function renderPagination(totalPages, current) {
 
 // Pesquisa
 searchBtn.addEventListener('click', () => {
-    searchQuery = searchInput.value;
+    searchQuery = searchInput.value.trim();
     currentPage = 1;
     renderPosts();
 });
 searchInput.addEventListener('keyup', (e) => {
     if (e.key === 'Enter') {
-        searchQuery = searchInput.value;
+        searchQuery = searchInput.value.trim();
         currentPage = 1;
         renderPosts();
     }
@@ -278,10 +288,8 @@ searchInput.addEventListener('keyup', (e) => {
 onAuthStateChanged(auth, (user) => {
     adminTriggerBtn.classList.remove('spin-animation');
     if (user && user.email === ADMIN_EMAIL) {
-        // Usuário logado é admin
         adminTriggerBtn.style.opacity = '1';
     } else {
-        // Não logado ou não admin
         adminTriggerBtn.style.opacity = '0.4';
     }
 });
@@ -296,11 +304,17 @@ adminTriggerBtn.addEventListener('click', () => {
         } else {
             loginModal.style.display = 'flex';
         }
-    }, 500);
+    }, 600);
 });
 
 closeLogin.addEventListener('click', () => loginModal.style.display = 'none');
 closeAdmin.addEventListener('click', () => adminModal.style.display = 'none');
+
+// Fechar modais ao clicar fora do conteúdo
+window.addEventListener('click', (e) => {
+    if (e.target === loginModal) loginModal.style.display = 'none';
+    if (e.target === adminModal) adminModal.style.display = 'none';
+});
 
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -328,6 +342,17 @@ logoutBtn.addEventListener('click', async () => {
     alert("Deslogado com sucesso.");
 });
 
+// Abas do Painel Admin
+const tabBtns = document.querySelectorAll('.tab-btn');
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+    });
+});
+
 // --- GERENCIAMENTO DE POSTS (ADMIN) ---
 function renderAdminPosts() {
     const list = document.getElementById('admin-posts-list');
@@ -338,8 +363,8 @@ function renderAdminPosts() {
         item.innerHTML = `
             <span><b>${post.title}</b></span>
             <div>
-                <button class="btn-primary" onclick="editPost('${post.id}')" style="padding: 5px 10px; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-danger" onclick="deletePost('${post.id}')"><i class="fa-solid fa-trash"></i></button>
+                <button type="button" class="btn-primary" onclick="editPost('${post.id}')" style="padding: 5px 10px; margin-right: 5px; width: auto;"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="btn-danger" onclick="deletePost('${post.id}')"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         list.appendChild(item);
@@ -363,17 +388,21 @@ postForm.addEventListener('submit', async (e) => {
         date: Date.now()
     };
 
-    if (id) {
-        await set(ref(db, 'posts/' + id), postData);
-    } else {
-        const newPostRef = push(ref(db, 'posts'));
-        await set(newPostRef, postData);
-    }
+    try {
+        if (id) {
+            await set(ref(db, 'posts/' + id), postData);
+        } else {
+            const newPostRef = push(ref(db, 'posts'));
+            await set(newPostRef, postData);
+        }
 
-    postForm.reset();
-    document.getElementById('post-id').value = '';
-    loadPosts();
-    alert("Post salvo com sucesso!");
+        postForm.reset();
+        document.getElementById('post-id').value = '';
+        loadPosts();
+        alert("Post salvo com sucesso!");
+    } catch (error) {
+        alert("Erro ao salvar post: " + error.message);
+    }
 });
 
 window.editPost = function(id) {
@@ -389,8 +418,12 @@ window.editPost = function(id) {
 
 window.deletePost = async function(id) {
     if (confirm("Tem certeza que deseja excluir este post?")) {
-        await remove(ref(db, 'posts/' + id));
-        loadPosts();
+        try {
+            await remove(ref(db, 'posts/' + id));
+            loadPosts();
+        } catch (error) {
+            alert("Erro ao excluir post: " + error.message);
+        }
     }
 }
 
@@ -401,12 +434,16 @@ menuForm.addEventListener('submit', async (e) => {
     const name = document.getElementById('menu-name').value;
     const url = document.getElementById('menu-url').value;
 
-    const newMenuRef = push(ref(db, 'menus'));
-    await set(newMenuRef, { name, url });
+    try {
+        const newMenuRef = push(ref(db, 'menus'));
+        await set(newMenuRef, { name, url });
 
-    menuForm.reset();
-    loadMenus();
-    alert("Menu adicionado!");
+        menuForm.reset();
+        loadMenus();
+        alert("Menu adicionado!");
+    } catch (error) {
+        alert("Erro ao adicionar menu: " + error.message);
+    }
 });
 
 // --- CONFIGURAÇÕES DE LAYOUT & APARÊNCIA (ADMIN) ---
@@ -419,10 +456,13 @@ layoutForm.addEventListener('submit', async (e) => {
     const perPage = document.getElementById('setting-per-page').value;
 
     const settingsData = { title, logo, favicon, perPage };
-    await set(ref(db, 'settings'), settingsData);
-
-    loadSettings();
-    alert("Configurações atualizadas com sucesso!");
+    try {
+        await set(ref(db, 'settings'), settingsData);
+        loadSettings();
+        alert("Configurações atualizadas com sucesso!");
+    } catch (error) {
+        alert("Erro ao atualizar configurações: " + error.message);
+    }
 });
 
 // --- GERADOR DE PÁGINAS (ZIP) ---
@@ -430,7 +470,6 @@ document.getElementById('download-zip-btn').addEventListener('click', async () =
     const subpageName = document.getElementById('subpage-name').value.trim() || 'subpagina';
     const zip = new JSZip();
 
-    // Arquivo HTML padrão para a subpágina
     const subHtml = `<!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
@@ -465,14 +504,16 @@ document.getElementById('download-zip-btn').addEventListener('click', async () =
 </body>
 </html>`;
 
-    // Incluir arquivos no ZIP
     zip.file("index.html", subHtml);
-    // Reutilizamos o style.css principal da raiz para manter a harmonia visual
-    const cssResponse = await fetch('style.css');
-    const cssText = await cssResponse.text();
-    zip.file("style.css", cssText);
+    
+    try {
+        const cssResponse = await fetch('style.css');
+        const cssText = await cssResponse.text();
+        zip.file("style.css", cssText);
+    } catch (e) {
+        zip.file("style.css", "/* Estilo padrão */");
+    }
 
-    // Gerar ZIP e disparar download
     zip.generateAsync({ type: "blob" }).then((content) => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
