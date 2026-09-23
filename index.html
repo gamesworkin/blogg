@@ -31,9 +31,9 @@
             <div class="header-actions">
                 <div class="search-box">
                     <input type="text" id="search-input" placeholder="Pesquisar posts...">
-                    <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button type="button" id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
-                <button id="hamburger-btn" class="hamburger-btn" aria-label="Menu">
+                <button type="button" id="hamburger-btn" class="hamburger-btn" aria-label="Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
@@ -61,6 +61,12 @@
                 <p id="sidebar-about">Bem-vindo ao nosso portal moderno integrado ao Firebase. Navegue, pesquise e explore conteúdos exclusivos.</p>
             </div>
             <div class="widget">
+                <h3><i class="fa-solid fa-tags"></i> Marcadores</h3>
+                <div id="sidebar-tags" class="tags-cloud">
+                    <!-- Tags injetadas via JS -->
+                </div>
+            </div>
+            <div class="widget">
                 <h3><i class="fa-solid fa-link"></i> Links Úteis</h3>
                 <ul id="sidebar-links">
                     <!-- Links úteis -->
@@ -75,15 +81,23 @@
     </footer>
 
     <!-- BOTÕES FLUTUANTES -->
-    <!-- Botão de Alternar Tema -->
-    <button id="theme-toggle-btn" class="float-btn theme-btn" aria-label="Alternar Tema">
+    <button type="button" id="theme-toggle-btn" class="float-btn theme-btn" aria-label="Alternar Tema">
         <i class="fa-solid fa-moon"></i>
     </button>
 
-    <!-- Botão Discreto de Admin / Login -->
-    <button id="admin-trigger-btn" class="float-btn admin-trigger" aria-label="Painel Administrativo">
+    <button type="button" id="admin-trigger-btn" class="float-btn admin-trigger" aria-label="Painel Administrativo">
         <i class="fa-solid fa-circle"></i>
     </button>
+
+    <!-- MODAL DE LEITURA DO POST -->
+    <div id="post-modal" class="modal">
+        <div class="modal-content post-reader-content">
+            <span class="close-modal" id="close-post-modal">&times;</span>
+            <div id="modal-post-container">
+                <!-- Conteúdo completo injetado via JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE LOGIN -->
     <div id="login-modal" class="modal">
@@ -111,10 +125,11 @@
             <h2><i class="fa-solid fa-screwdriver-wrench"></i> Painel Administrativo</h2>
             
             <div class="admin-tabs">
-                <button class="tab-btn active" data-tab="tab-posts">Gerenciar Posts</button>
-                <button class="tab-btn" data-tab="tab-menus">Menus & Links</button>
-                <button class="tab-btn" data-tab="tab-layout">Layout & Aparência</button>
-                <button class="tab-btn" data-tab="tab-generator">Gerador de Páginas</button>
+                <button type="button" class="tab-btn active" data-tab="tab-posts">Gerenciar Posts</button>
+                <button type="button" class="tab-btn" data-tab="tab-tags">Gerenciar Marcadores</button>
+                <button type="button" class="tab-btn" data-tab="tab-menus">Menus & Links</button>
+                <button type="button" class="tab-btn" data-tab="tab-layout">Layout & Aparência</button>
+                <button type="button" class="tab-btn" data-tab="tab-generator">Gerador de Páginas</button>
             </div>
 
             <!-- ABA POSTS -->
@@ -126,13 +141,27 @@
                         <label>Título do Post</label>
                         <input type="text" id="post-title" required>
                     </div>
+                    <div class="row-inputs">
+                        <div class="input-group">
+                            <label>Categoria</label>
+                            <input type="text" id="post-category" placeholder="Ex: Tutoriais, Notícias">
+                        </div>
+                        <div class="input-group">
+                            <label>Autor</label>
+                            <input type="text" id="post-author" placeholder="Ex: Administrador">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Marcadores (Separe por vírgulas)</label>
+                        <input type="text" id="post-tags" placeholder="ps2, retro, games, firebase">
+                    </div>
                     <div class="input-group">
                         <label>Resumo / Descrição Curta</label>
                         <textarea id="post-summary" rows="2" required></textarea>
                     </div>
                     <div class="input-group">
-                        <label>Conteúdo Completo (HTML suportado)</label>
-                        <textarea id="post-content" rows="6" required></textarea>
+                        <label>Conteúdo HTML Completo (Infinito / Sem Limite de Tamanho)</label>
+                        <textarea id="post-content" class="infinite-textarea" rows="10" required placeholder="Insira seu código HTML, scripts ou textos longos aqui..."></textarea>
                     </div>
                     <div class="input-group">
                         <label>URL da Imagem de Capa</label>
@@ -143,6 +172,19 @@
                 <hr style="margin: 20px 0; border-color: var(--border-color);">
                 <h3>Lista de Postagens</h3>
                 <div id="admin-posts-list" class="admin-list"></div>
+            </div>
+
+            <!-- ABA MARCADORES -->
+            <div id="tab-tags" class="tab-pane">
+                <h3>Gerenciar Marcadores (Tags)</h3>
+                <form id="tag-form">
+                    <div class="input-group">
+                        <label>Nome do Novo Marcador</label>
+                        <input type="text" id="tag-name" required placeholder="Ex: Emulador">
+                    </div>
+                    <button type="submit" class="btn-primary">Adicionar Marcador</button>
+                </form>
+                <div id="admin-tags-list" class="admin-list" style="margin-top: 15px;"></div>
             </div>
 
             <!-- ABA MENUS -->
@@ -199,11 +241,11 @@
                     <label>Nome da Subpágina / Pasta</label>
                     <input type="text" id="subpage-name" placeholder="ex: contato ou tutoriais">
                 </div>
-                <button id="download-zip-btn" class="btn-primary" type="button"><i class="fa-solid fa-download"></i> Baixar Página Padrão (ZIP)</button>
+                <button type="button" id="download-zip-btn" class="btn-primary"><i class="fa-solid fa-download"></i> Baixar Página Padrão (ZIP)</button>
             </div>
 
             <div style="margin-top: 20px; text-align: right;">
-                <button id="logout-btn" class="btn-danger" type="button"><i class="fa-solid fa-right-from-bracket"></i> Sair da Conta</button>
+                <button type="button" id="logout-btn" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Sair da Conta</button>
             </div>
         </div>
     </div>
