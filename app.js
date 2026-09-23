@@ -2,14 +2,15 @@
 // CONFIGURAÇÃO DO FIREBASE (INSIRA SEUS DADOS AQUI)
 // ==========================================
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-    appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCRIQZdBjolh7fadpCqPh6ahr64sBIZy7o",
+  authDomain: "blog-workin.firebaseapp.com",
+  databaseURL: "https://blog-workin-default-rtdb.firebaseio.com",
+  projectId: "blog-workin",
+  storageBucket: "blog-workin.firebasestorage.app",
+  messagingSenderId: "331204790714",
+  appId: "1:331204790714:web:ec65d20ec4b454e51cb583"
 };
+
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
