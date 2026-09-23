@@ -182,7 +182,6 @@ async function loadTags() {
         if (allTags.length === 0) {
             sidebarTags.innerHTML = `<span style="font-size:0.85rem; color:#888;">Nenhum marcador</span>`;
         } else {
-            // Botão para limpar filtro de tag
             const allBtn = document.createElement('button');
             allBtn.type = 'button';
             allBtn.className = `tag-badge ${selectedTagFilter === '' ? 'active' : ''}`;
@@ -252,12 +251,10 @@ function renderPosts() {
 
     let filtered = allPosts;
     
-    // Filtro por pesquisa
     if (searchQuery) {
         filtered = filtered.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
-    // Filtro por tag/marcador selecionado
     if (selectedTagFilter) {
         filtered = filtered.filter(p => p.tags && p.tags.toLowerCase().includes(selectedTagFilter.toLowerCase()));
     }
@@ -298,7 +295,6 @@ function renderPosts() {
             </div>
         `;
 
-        // Ação de clique no card para abrir o post completo
         card.addEventListener('click', () => {
             openPostModal(post);
         });
@@ -309,24 +305,24 @@ function renderPosts() {
     renderPagination(totalPages, currentPage);
 }
 
-// Abrir Modal com Conteúdo Completo do Post
+// Abrir Modal perfeitamente enquadrado com conteúdo completo e imagens redimensionadas
 function openPostModal(post) {
     const modalContainer = document.getElementById('modal-post-container');
     let tagsHtml = '';
     if (post.tags) {
         const tagArray = post.tags.split(',').map(t => t.trim()).filter(t => t);
-        tagsHtml = `<div class="post-tags-container" style="margin-top: 15px;">` + tagArray.map(t => `<span class="tag-badge">#${t}</span>`).join('') + `</div>`;
+        tagsHtml = `<div class="post-tags-container" style="margin-top: 20px;">` + tagArray.map(t => `<span class="tag-badge">#${t}</span>`).join('') + `</div>`;
     }
 
     modalContainer.innerHTML = `
-        ${post.image ? `<img src="${post.image}" style="width:100\%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:15px;" alt="${post.title}">` : ''}
-        <div class="post-meta-info" style="margin-bottom: 10px;">
+        ${post.image ? `<img src="${post.image}" style="width:100\%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:20px;" alt="${post.title}">` : ''}
+        <div class="post-meta-info" style="margin-bottom: 12px;">
             <span><i class="fa-regular fa-calendar"></i> ${new Date(post.date).toLocaleDateString('pt-BR')}</span>
             ${post.category ? `<span><i class="fa-solid fa-folder"></i> ${post.category}</span>` : ''}
             ${post.author ? `<span><i class="fa-solid fa-user"></i> ${post.author}</span>` : ''}
         </div>
-        <h1 style="font-size: 1.8rem; margin-bottom: 15px; color: var(--text-color);">${post.title}</h1>
-        <div class="post-full-html-content" style="line-height: 1.7; font-size: 1.05rem;">${post.content}</div>
+        <h1 style="font-size: 1.8rem; margin-bottom: 15px; color: var(--text-color); line-height: 1.3;">${post.title}</h1>
+        <div class="post-full-html-content" style="line-height: 1.7; font-size: 1.05rem; overflow-wrap: break-word;">${post.content}</div>
         ${tagsHtml}
     `;
     postModal.style.display = 'flex';
@@ -334,7 +330,7 @@ function openPostModal(post) {
 
 closePostModal.addEventListener('click', () => postModal.style.display = 'none');
 
-// --- PAGINAÇÃO INTELIGENTE (MAX 5 NÚMEROS + SETAS) ---
+// --- PAGINAÇÃO INTELIGENTE ---
 function renderPagination(totalPages, current) {
     const container = document.getElementById('pagination-container');
     container.innerHTML = '';
@@ -485,7 +481,7 @@ postForm.addEventListener('submit', async (e) => {
     const author = document.getElementById('post-author').value;
     const tags = document.getElementById('post-tags').value;
     const summary = document.getElementById('post-summary').value;
-    const content = document.getElementById('post-content').value;
+    const content = document.getElementById('post-content').value; // Conteúdo HTML Gigante / Infinito
     const image = document.getElementById('post-image').value;
 
     const postData = {
