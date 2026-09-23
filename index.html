@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site-title">Meu Blog Moderno</title>
+    <link id="site-favicon" rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Biblioteca JSZip para gerar o pacote ZIP das páginas padrão -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+    <!-- CABEÇALHO -->
+    <header class="site-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <img id="site-logo-img" src="" alt="Logo" style="display: none;">
+                <h1 id="site-logo-text"><i class="fa-solid fa-code"></i> Workin'Blog</h1>
+            </div>
+
+            <!-- MENU DE NAVEGAÇÃO / HAMBÚRGUER -->
+            <nav class="site-nav" id="site-nav">
+                <ul id="menu-list">
+                    <!-- Dinâmico via JS -->
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Pesquisar posts...">
+                    <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <button id="hamburger-btn" class="hamburger-btn" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO EM CASCATA -->
+    <main class="main-container">
+        <!-- ÁREA DE POSTS -->
+        <section class="content-section">
+            <div id="posts-container" class="posts-cascade">
+                <!-- Posts injetados via JS -->
+            </div>
+
+            <!-- PAGINAÇÃO -->
+            <div class="pagination-area" id="pagination-container">
+                <!-- Paginação injetada via JS -->
+            </div>
+        </section>
+
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <div class="widget">
+                <h3><i class="fa-solid fa-fire"></i> Sobre o Blog</h3>
+                <p id="sidebar-about">Bem-vindo ao nosso portal moderno integrado ao Firebase. Navegue, pesquise e explore conteúdos exclusivos.</p>
+            </div>
+            <div class="widget">
+                <h3><i class="fa-solid fa-link"></i> Links Úteis</h3>
+                <ul id="sidebar-links">
+                    <!-- Links úteis -->
+                </ul>
+            </div>
+        </aside>
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="site-footer">
+        <p>&copy; 2026 Meu Blog Moderno. Todos os direitos reservados. Hospedado no GitHub Pages.</p>
+    </footer>
+
+    <!-- BOTÕES FLUTUANTES -->
+    <!-- Botão de Alternar Tema -->
+    <button id="theme-toggle-btn" class="float-btn theme-btn" aria-label="Alternar Tema">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <!-- Botão Discreto de Admin / Login -->
+    <button id="admin-trigger-btn" class="float-btn admin-trigger" aria-label="Painel Administrativo">
+        <i class="fa-solid fa-circle"></i>
+    </button>
+
+    <!-- MODAL DE LOGIN -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-login">&times;</span>
+            <h2><i class="fa-solid fa-lock"></i> Acesso Restrito</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" required placeholder="admin@admin.com">
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required placeholder="********">
+                </div>
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ADMINISTRATIVO / PAINEL -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content admin-content">
+            <span class="close-modal" id="close-admin">&times;</span>
+            <h2><i class="fa-solid fa-screwdriver-wrench"></i> Painel Administrativo</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="tab-posts">Gerenciar Posts</button>
+                <button class="tab-btn" data-tab="tab-menus">Menus & Links</button>
+                <button class="tab-btn" data-tab="tab-layout">Layout & Aparência</button>
+                <button class="tab-btn" data-tab="tab-generator">Gerador de Páginas</button>
+            </div>
+
+            <!-- ABA POSTS -->
+            <div id="tab-posts" class="tab-pane active">
+                <h3>Criar / Editar Post</h3>
+                <form id="post-form">
+                    <input type="hidden" id="post-id">
+                    <div class="input-group">
+                        <label>Título do Post</label>
+                        <input type="text" id="post-title" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Resumo / Descrição Curta</label>
+                        <textarea id="post-summary" rows="2" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Conteúdo Completo (HTML suportado)</label>
+                        <textarea id="post-content" rows="6" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>URL da Imagem de Capa</label>
+                        <input type="url" id="post-image" placeholder="https://exemplo.com/imagem.jpg">
+                    </div>
+                    <button type="submit" class="btn-primary">Salvar Postagem</button>
+                </form>
+                <hr style="margin: 20px 0; border-color: var(--border-color);">
+                <h3>Lista de Postagens</h3>
+                <div id="admin-posts-list" class="admin-list"></div>
+            </div>
+
+            <!-- ABA MENUS -->
+            <div id="tab-menus" class="tab-pane">
+                <h3>Gerenciar Barra de Menus</h3>
+                <form id="menu-form">
+                    <div class="input-group">
+                        <label>Nome da Página / Link</label>
+                        <input type="text" id="menu-name" required placeholder="Ex: Início, Tutoriais">
+                    </div>
+                    <div class="input-group">
+                        <label>URL / Caminho</label>
+                        <input type="text" id="menu-url" required placeholder="index.html ou https://...">
+                    </div>
+                    <button type="submit" class="btn-primary">Adicionar Item ao Menu</button>
+                </form>
+                <div id="admin-menu-list" class="admin-list" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- ABA LAYOUT E APARÊNCIA -->
+            <div id="tab-layout" class="tab-pane">
+                <h3>Personalizar Layout, Título e Cores</h3>
+                <form id="layout-form">
+                    <div class="input-group">
+                        <label>Título do Site</label>
+                        <input type="text" id="setting-title" required>
+                    </div>
+                    <div class="input-group">
+                        <label>URL do Logo (Imagem)</label>
+                        <input type="url" id="setting-logo" placeholder="Deixe em branco para usar texto">
+                    </div>
+                    <div class="input-group">
+                        <label>URL do Favicon</label>
+                        <input type="url" id="setting-favicon">
+                    </div>
+                    <div class="input-group">
+                        <label>Posts por Página</label>
+                        <select id="setting-per-page">
+                            <option value="5">5 posts</option>
+                            <option value="10">10 posts</option>
+                            <option value="20">20 posts</option>
+                            <option value="30">30 posts</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Salvar Configurações</button>
+                </form>
+            </div>
+
+            <!-- ABA GERADOR DE PÁGINAS -->
+            <div id="tab-generator" class="tab-pane">
+                <h3>Gerador de Páginas Padrão para Subpáginas</h3>
+                <p>Baixe o pacote ZIP contendo os arquivos base (`index.html`, `style.css` e `app.js`) padronizados para hospedar em subpastas no GitHub Pages (ex: `usuario.github.io/site/subpagina`).</p>
+                <div class="input-group" style="margin-top: 15px;">
+                    <label>Nome da Subpágina / Pasta</label>
+                    <input type="text" id="subpage-name" placeholder="ex: contato ou tutoriais">
+                </div>
+                <button id="download-zip-btn" class="btn-primary"><i class="fa-solid fa-download"></i> Baixar Página Padrão (ZIP)</button>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="logout-btn" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Sair da Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Principal -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
