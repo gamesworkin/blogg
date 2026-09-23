@@ -159,16 +159,32 @@ body {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
 }
 
 .post-img {
     width: 100%;
-    max-height: 300px;
+    max-height: 280px;
     object-fit: cover;
 }
 
 .post-body {
     padding: 20px;
+}
+
+.post-meta-info {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 
 .post-title {
@@ -177,16 +193,26 @@ body {
     color: var(--text-color);
 }
 
-.post-date {
-    font-size: 0.85rem;
-    color: #888;
-    margin-bottom: 12px;
-}
-
 .post-summary {
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 15px;
+}
+
+.post-tags-container {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tag-badge {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
 }
 
 /* PAGINAÇÃO */
@@ -237,6 +263,12 @@ body {
     gap: 8px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
+}
+
+.tags-cloud {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .widget ul {
@@ -336,8 +368,14 @@ body {
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
+.post-reader-content {
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 .admin-content {
-    max-width: 800px;
+    max-width: 850px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -349,10 +387,17 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--text-color);
+    z-index: 10;
 }
 
 .input-group {
     margin-bottom: 15px;
+}
+
+.row-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
 }
 
 .input-group label {
@@ -370,6 +415,13 @@ body {
     border-radius: 6px;
     color: var(--text-color);
     outline: none;
+}
+
+.infinite-textarea {
+    resize: vertical;
+    min-height: 200px;
+    font-family: monospace;
+    font-size: 0.9rem;
 }
 
 .btn-primary {
@@ -450,6 +502,10 @@ body {
 /* RESPONSIVIDADE MOBILE */
 @media (max-width: 768px) {
     .main-container {
+        grid-template-columns: 1fr;
+    }
+
+    .row-inputs {
         grid-template-columns: 1fr;
     }
 
