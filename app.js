@@ -23,17 +23,21 @@ const ADMIN_EMAIL = "admin@admin.com";
 
 // Estado da Aplicação
 let allPosts = [];
+let allTags = [];
 let currentPage = 1;
 let postsPerPage = 5;
 let searchQuery = "";
+let selectedTagFilter = "";
 
 // Elementos DOM
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const adminTriggerBtn = document.getElementById('admin-trigger-btn');
 const loginModal = document.getElementById('login-modal');
 const adminModal = document.getElementById('admin-modal');
+const postModal = document.getElementById('post-modal');
 const closeLogin = document.getElementById('close-login');
 const closeAdmin = document.getElementById('close-admin');
+const closePostModal = document.getElementById('close-post-modal');
 const loginForm = document.getElementById('login-form');
 const logoutBtn = document.getElementById('logout-btn');
 const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -72,7 +76,6 @@ hamburgerBtn.addEventListener('click', () => {
     siteNav.classList.toggle('active');
 });
 
-// Fechar menu mobile ao clicar em um link
 document.addEventListener('click', (e) => {
     if (e.target.matches('.site-nav a')) {
         siteNav.classList.remove('active');
@@ -129,7 +132,6 @@ async function loadMenus() {
             });
         }
 
-        // Menu Padrão Inicial se vazio
         if (menus.length === 0) {
             menus = [{ id: 'default', name: 'Início', url: 'index.html' }];
         }
@@ -160,6 +162,72 @@ window.deleteMenu = async function(id) {
     }
 }
 
+// --- CARREGAR MARCADORES (TAGS) ---
+async function loadTags() {
+    const sidebarTags = document.getElementById('sidebar-tags');
+    const adminTagsList = document.getElementById('admin-tags-list');
+    sidebarTags.innerHTML = '';
+    adminTagsList.innerHTML = '';
+
+    try {
+        const snapshot = await get(child(ref(db), 'tags'));
+        allTags = [];
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                allTags.push({ id: childSnapshot.key, ...childSnapshot.val() });
+            });
+        }
+
+        // Renderizar tags na Sidebar
+        if (allTags.length === 0) {
+            sidebarTags.innerHTML = `<span style="font-size:0.85rem; color:#888;">Nenhum marcador</span>`;
+        } else {
+            // Botão para limpar filtro de tag
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = `tag-badge ${selectedTagFilter === '' ? 'active' : ''}`;
+            allBtn.style.cursor = 'pointer';
+            allBtn.innerHTML = `<b>Todos</b>`;
+            allBtn.onclick = () => { selectedTagFilter = ''; currentPage = 1; renderPosts(); loadTags(); };
+            sidebarTags.appendChild(allBtn);
+
+            allTags.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `tag-badge ${selectedTagFilter === tag.name ? 'active' : ''}`;
+                btn.style.cursor = 'pointer';
+                btn.innerHTML = `${tag.name}`;
+                btn.onclick = () => { selectedTagFilter = tag.name; currentPage = 1; renderPosts(); loadTags(); };
+                sidebarTags.appendChild(btn);
+            });
+        }
+
+        // Renderizar no painel admin
+        allTags.forEach(tag => {
+            const item = document.createElement('div');
+            item.className = 'admin-list-item';
+            item.innerHTML = `
+                <span><b>${tag.name}</b></span>
+                <button type="button" class="btn-danger" onclick="deleteTag('${tag.id}')"><i class="fa-solid fa-trash"></i></button>
+            `;
+            adminTagsList.appendChild(item);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar tags:", error);
+    }
+}
+
+window.deleteTag = async function(id) {
+    if (confirm("Deseja excluir este marcador?")) {
+        try {
+            await remove(ref(db, 'tags/' + id));
+            loadTags();
+        } catch (error) {
+            alert("Erro ao excluir tag: " + error.message);
+        }
+    }
+}
+
 // --- CARREGAR POSTS E CASCATA ---
 async function loadPosts() {
     try {
@@ -183,8 +251,15 @@ function renderPosts() {
     container.innerHTML = '';
 
     let filtered = allPosts;
+    
+    // Filtro por pesquisa
     if (searchQuery) {
-        filtered = allPosts.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase()));
+        filtered = filtered.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+
+    // Filtro por tag/marcador selecionado
+    if (selectedTagFilter) {
+        filtered = filtered.filter(p => p.tags && p.tags.toLowerCase().includes(selectedTagFilter.toLowerCase()));
     }
 
     const totalPages = Math.ceil(filtered.length / postsPerPage) || 1;
@@ -202,32 +277,62 @@ function renderPosts() {
     paginatedPosts.forEach(post => {
         const card = document.createElement('article');
         card.className = 'post-card';
+        
+        let tagsHtml = '';
+        if (post.tags) {
+            const tagArray = post.tags.split(',').map(t => t.trim()).filter(t => t);
+            tagsHtml = `<div class="post-tags-container">` + tagArray.map(t => `<span class="tag-badge">#${t}</span>`).join('') + `</div>`;
+        }
+
         card.innerHTML = `
             ${post.image ? `<img src="${post.image}" class="post-img" alt="${post.title}">` : ''}
             <div class="post-body">
+                <div class="post-meta-info">
+                    <span><i class="fa-regular fa-calendar"></i> ${new Date(post.date).toLocaleDateString('pt-BR')}</span>
+                    ${post.category ? `<span><i class="fa-solid fa-folder"></i> ${post.category}</span>` : ''}
+                    ${post.author ? `<span><i class="fa-solid fa-user"></i> ${post.author}</span>` : ''}
+                </div>
                 <h2 class="post-title">${post.title}</h2>
-                <div class="post-date"><i class="fa-regular fa-calendar"></i> ${new Date(post.date).toLocaleDateString('pt-BR')}</div>
                 <div class="post-summary">${post.summary}</div>
-                <div class="post-full-content" style="display:none; margin-top:15px;">${post.content}</div>
-                <button type="button" class="btn-primary" onclick="toggleReadMore(this)" style="width: auto; padding: 6px 15px; font-size: 0.9rem;">Ler Mais</button>
+                ${tagsHtml}
             </div>
         `;
+
+        // Ação de clique no card para abrir o post completo
+        card.addEventListener('click', () => {
+            openPostModal(post);
+        });
+
         container.appendChild(card);
     });
 
     renderPagination(totalPages, currentPage);
 }
 
-window.toggleReadMore = function(btn) {
-    const body = btn.previousElementSibling;
-    if (body.style.display === 'none') {
-        body.style.display = 'block';
-        btn.innerText = 'Ler Menos';
-    } else {
-        body.style.display = 'none';
-        btn.innerText = 'Ler Mais';
+// Abrir Modal com Conteúdo Completo do Post
+function openPostModal(post) {
+    const modalContainer = document.getElementById('modal-post-container');
+    let tagsHtml = '';
+    if (post.tags) {
+        const tagArray = post.tags.split(',').map(t => t.trim()).filter(t => t);
+        tagsHtml = `<div class="post-tags-container" style="margin-top: 15px;">` + tagArray.map(t => `<span class="tag-badge">#${t}</span>`).join('') + `</div>`;
     }
+
+    modalContainer.innerHTML = `
+        ${post.image ? `<img src="${post.image}" style="width:100\%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:15px;" alt="${post.title}">` : ''}
+        <div class="post-meta-info" style="margin-bottom: 10px;">
+            <span><i class="fa-regular fa-calendar"></i> ${new Date(post.date).toLocaleDateString('pt-BR')}</span>
+            ${post.category ? `<span><i class="fa-solid fa-folder"></i> ${post.category}</span>` : ''}
+            ${post.author ? `<span><i class="fa-solid fa-user"></i> ${post.author}</span>` : ''}
+        </div>
+        <h1 style="font-size: 1.8rem; margin-bottom: 15px; color: var(--text-color);">${post.title}</h1>
+        <div class="post-full-html-content" style="line-height: 1.7; font-size: 1.05rem;">${post.content}</div>
+        ${tagsHtml}
+    `;
+    postModal.style.display = 'flex';
 }
+
+closePostModal.addEventListener('click', () => postModal.style.display = 'none');
 
 // --- PAGINAÇÃO INTELIGENTE (MAX 5 NÚMEROS + SETAS) ---
 function renderPagination(totalPages, current) {
@@ -310,10 +415,10 @@ adminTriggerBtn.addEventListener('click', () => {
 closeLogin.addEventListener('click', () => loginModal.style.display = 'none');
 closeAdmin.addEventListener('click', () => adminModal.style.display = 'none');
 
-// Fechar modais ao clicar fora do conteúdo
 window.addEventListener('click', (e) => {
     if (e.target === loginModal) loginModal.style.display = 'none';
     if (e.target === adminModal) adminModal.style.display = 'none';
+    if (e.target === postModal) postModal.style.display = 'none';
 });
 
 loginForm.addEventListener('submit', async (e) => {
@@ -376,12 +481,18 @@ postForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('post-id').value;
     const title = document.getElementById('post-title').value;
+    const category = document.getElementById('post-category').value;
+    const author = document.getElementById('post-author').value;
+    const tags = document.getElementById('post-tags').value;
     const summary = document.getElementById('post-summary').value;
     const content = document.getElementById('post-content').value;
     const image = document.getElementById('post-image').value;
 
     const postData = {
         title,
+        category,
+        author,
+        tags,
         summary,
         content,
         image,
@@ -410,6 +521,9 @@ window.editPost = function(id) {
     if (post) {
         document.getElementById('post-id').value = post.id;
         document.getElementById('post-title').value = post.title;
+        document.getElementById('post-category').value = post.category || '';
+        document.getElementById('post-author').value = post.author || '';
+        document.getElementById('post-tags').value = post.tags || '';
         document.getElementById('post-summary').value = post.summary;
         document.getElementById('post-content').value = post.content;
         document.getElementById('post-image').value = post.image || '';
@@ -426,6 +540,24 @@ window.deletePost = async function(id) {
         }
     }
 }
+
+// --- GERENCIAMENTO DE MARCADORES (TAGS) - ADMIN ---
+const tagForm = document.getElementById('tag-form');
+tagForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('tag-name').value.trim();
+    if (!name) return;
+
+    try {
+        const newTagRef = push(ref(db, 'tags'));
+        await set(newTagRef, { name });
+        tagForm.reset();
+        loadTags();
+        alert("Marcador adicionado!");
+    } catch (error) {
+        alert("Erro ao adicionar marcador: " + error.message);
+    }
+});
 
 // --- GERENCIAMENTO DE MENUS (ADMIN) ---
 const menuForm = document.getElementById('menu-form');
@@ -525,4 +657,5 @@ document.getElementById('download-zip-btn').addEventListener('click', async () =
 // Inicialização Geral
 loadSettings();
 loadMenus();
+loadTags();
 loadPosts();
